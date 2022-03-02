@@ -355,6 +355,14 @@ static void __init sgx_init(void)
 		goto err_kthread;
 	}
 
+//file_operation
+#ifdef CONFIG_PROC_FS
+	if (!proc_create("sgx_stats2", 0444, NULL, &sgx_stats_ops)) {
+		ret = -ENOMEM;
+		goto out_workqueue;
+	}
+#endif
+
 	/* Success if the native *or* virtual driver initialized cleanly. */
 	ret = sgx_drv_init();
 	ret = sgx_virt_epc_init() ? ret : 0;
@@ -371,14 +379,6 @@ err_kthread:
 
 err_page_cache:
 	sgx_page_cache_teardown();
-
-//file_operation
-#ifdef CONFIG_PROC_FS
-	if (!proc_create("sgx_stats2", 0444, NULL, &sgx_stats_ops)) {
-		ret = -ENOMEM;
-		goto out_workqueue;
-	}
-#endif
 
 out_workqueue:
 	return;
