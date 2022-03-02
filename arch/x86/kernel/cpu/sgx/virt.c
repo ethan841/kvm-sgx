@@ -14,6 +14,8 @@
 #include "sgx.h"
 #include "virt.h"
 
+int val = 0;
+
 struct sgx_virt_epc_page {
 	struct sgx_epc_page *epc_page;
 };
@@ -59,7 +61,8 @@ static int __sgx_virt_epc_fault(struct sgx_virt_epc *epc,
 	}
 
 	epc_page = sgx_alloc_page(&epc, false);
-	printk("SGX Enclave page alloc! \n");
+	
+	printk("SGX Enclave page alloc! %d\n", val++);
 	
 	if (IS_ERR(epc_page))
 		return PTR_ERR(epc_page);
@@ -186,7 +189,7 @@ static int sgx_virt_epc_free_page(struct sgx_epc_page *epc_page)
 	}
 
 	__sgx_free_page(epc_page);
-	printk("Free SGX Enclave page! \n");
+	printk("Free SGX Enclave page! %d\n", val--);
 
 	return 0;
 }
