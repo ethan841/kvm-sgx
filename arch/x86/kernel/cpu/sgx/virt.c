@@ -14,7 +14,13 @@
 #include "sgx.h"
 #include "virt.h"
 
+//proc_ops
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+
 int val = 0;
+static unsigned long sgx_pages_freed = 0;
+static unsigned long sgx_pages_alloced = 0;
 
 struct sgx_virt_epc_page {
 	struct sgx_epc_page *epc_page;
@@ -62,8 +68,9 @@ static int __sgx_virt_epc_fault(struct sgx_virt_epc *epc,
 
 	epc_page = sgx_alloc_page(&epc, false);
 	
-	printk("SGX Enclave page alloc! %d\n", val++);
-	
+	//printk("SGX Enclave page alloc! %d\n", val++);
+	sgx_pages_alloced++;
+
 	if (IS_ERR(epc_page))
 		return PTR_ERR(epc_page);
 
@@ -189,7 +196,8 @@ static int sgx_virt_epc_free_page(struct sgx_epc_page *epc_page)
 	}
 
 	__sgx_free_page(epc_page);
-	printk("Free SGX Enclave page! %d\n", val--);
+	//printk("Free SGX Enclave page! %d\n", val--);
+	sgx_pages_freed++;
 
 	return 0;
 }
@@ -352,3 +360,15 @@ int sgx_virt_einit(void __user *sigstruct, void __user *token,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(sgx_virt_einit);
+
+//sgxstat
+#ifdef CONFIG_PROC_FS
+int sgx_stats_read(struct seq_file *file, void *v)
+{
+	seq_printf(file, "%lu %lu\n",
+		sgx_pages_alloced,
+		sgx_pages_freed);
+	
+	return(0);
+}
+#endif

@@ -108,4 +108,7 @@ void sgx_free_page(struct sgx_epc_page *page);
 
 void sgx_update_lepubkeyhash_msrs(u64 *lepubkeyhash, bool enforce);
 
+//sgx_stat
+int sgx_stats_read(struct seq_file *file, void *v);
+
 #endif /* _X86_SGX_H */

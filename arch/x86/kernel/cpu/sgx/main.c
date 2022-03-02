@@ -11,11 +11,31 @@
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
 
+//proc_ops
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+
 #include <asm/sgx_arch.h>
 
 #include "driver.h"
 #include "encls.h"
 #include "virt.h"
+
+//file_operation
+#ifdef CONFIG_PROC_FS
+static int sgx_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, sgx_stats_read, NULL);
+}
+
+static struct proc_ops sgx_stats_ops = {
+		.proc_open = sgx_stats_open,
+		.proc_read = seq_read,
+		.proc_lseek = seq_lseek,
+		.proc_release = single_release
+};
+#endif
+//
 
 /* A per-cpu cache for the last known values of IA32_SGXLEPUBKEYHASHx MSRs. */
 static DEFINE_PER_CPU(u64 [4], sgx_lepubkeyhash_cache);
@@ -351,6 +371,17 @@ err_kthread:
 
 err_page_cache:
 	sgx_page_cache_teardown();
+
+//file_operation
+#ifdef CONFIG_PROC_FS
+	if (!proc_create("sgx_stats2", 0444, NULL, &sgx_stats_ops)) {
+		ret = -ENOMEM;
+		goto out_workqueue;
+	}
+#endif
+
+out_workqueue:
+	return;
 }
 
 device_initcall(sgx_init);
