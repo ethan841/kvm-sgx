@@ -12,6 +12,9 @@
 
 #define DEBUG		/* Enable initcall_debug */
 
+//measure boot time
+#include "benchmark.h"
+
 #include <linux/types.h>
 #include <linux/extable.h>
 #include <linux/module.h>
@@ -787,6 +790,9 @@ asmlinkage __visible void __init start_kernel(void)
 	char *command_line;
 	char *after_dashes;
 
+	//measure boot time
+	outb(LINUX_START_KERNEL, LINUX_EXIT_PORT);
+
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
 	debug_objects_early_init();
@@ -1366,6 +1372,9 @@ static int __ref kernel_init(void *unused)
 	numa_default_policy();
 
 	rcu_end_inkernel_boot();
+
+	//measuring boot time
+	outb(LINUX_START_USER, LINUX_EXIT_PORT);
 
 	if (ramdisk_execute_command) {
 		ret = run_init_process(ramdisk_execute_command);
